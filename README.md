@@ -1,6 +1,6 @@
 __NOTICE__
 
-__I have been granted control of this Add-on. I will be creating a new version for Kodi 18.__
+__Play your soundtrack or video themes while browsing your library.__
 
 
 ![TvTunes](icon.png)
