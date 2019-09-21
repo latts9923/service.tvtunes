@@ -1,8 +1,3 @@
-__NOTICE__
-
-__Play your soundtrack or video themes while browsing your library.__
-
-
 ![TvTunes](icon.png)
 
 TvTunes has grown over time and is now more than a simple theme player for TV Shows, some of the features include:
