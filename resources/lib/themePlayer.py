@@ -71,7 +71,7 @@ class ThemePlayer(xbmc.Player):
             # need to stop the current one
             if not self.isPlayingTheme():
                 self.restoreSettings()
-        xbmc.Player.onPlayBackStarted(self)
+        xbmc.Player.onAVStarted(self)
 
     def restoreSettings(self):
         log("ThemePlayer: Restoring player settings")
