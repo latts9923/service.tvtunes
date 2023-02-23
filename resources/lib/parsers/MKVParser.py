@@ -7,7 +7,7 @@
 import os, struct
 import traceback
 
-from FileAccess import FileAccess
+from resources.lib.parsers.FileAccess import FileAccess
 
 
 

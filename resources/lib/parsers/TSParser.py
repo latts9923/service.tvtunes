@@ -6,7 +6,7 @@
 
 import os, struct
 
-from FileAccess import FileAccess
+from resources.lib.parsers.FileAccess import FileAccess
 
 
 class TSPacket:

@@ -6,12 +6,12 @@
 
 import os
 
-import parsers.MP4Parser as MP4Parser
-import parsers.AVIParser as AVIParser
-import parsers.MKVParser as MKVParser
-import parsers.FLVParser as FLVParser
-import parsers.TSParser as TSParser
-from parsers.FileAccess import FileAccess
+import resources.lib.parsers.MP4Parser as MP4Parser
+import resources.lib.parsers.AVIParser as AVIParser
+import resources.lib.parsers.MKVParser as MKVParser
+import resources.lib.parsers.FLVParser as FLVParser
+import resources.lib.parsers.TSParser as TSParser
+from resources.lib.parsers.FileAccess import FileAccess
 
 
 class VideoParser:

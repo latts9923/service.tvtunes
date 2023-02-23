@@ -30,7 +30,7 @@ class FileAccess:
             if isinstance (txt,str):
                 txt = txt.decode("utf-8")
             message = u'%s: %s' % (__addonid__, txt)
-            xbmc.log(msg=message.encode("utf-8"), level=xbmc.LOGDEBUG)
+            log(msg=message.encode("utf-8"), level=LOGDEBUG)
 
 
     @staticmethod
@@ -162,10 +162,10 @@ class VFSFile:
         else:        
             self.currentFile = xbmcvfs.File(filename)
 
-        # log("VFSFile: Opening " + filename, xbmc.LOGDEBUG)
+        # log("VFSFile: Opening " + filename, LOGDEBUG)
         
         if self.currentFile == None:
-            log("VFSFile: Couldnt open " + filename, xbmc.LOGERROR)
+            log("VFSFile: Couldnt open " + filename, LOGERROR)
 
 
     def read(self, bytes):

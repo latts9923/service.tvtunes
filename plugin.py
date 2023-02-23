@@ -147,8 +147,8 @@ class MenuNavigator():
         if target == MenuNavigator.MUSICVIDEOS:
             origTitleRequest = ''
 
-        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
-#        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "imdbnumber", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
+        json_query = executeJSONRPC('{"jsonrpc": "2.0", "method": "Videos.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
+#        json_query = executeJSONRPC('{"jsonrpc": "2.0", "method": "Videos.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "imdbnumber", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
         json_query = unicode(json_query, 'utf-8', errors='ignore')
         json_response = simplejson.loads(json_query)
         log(json_response)
@@ -251,7 +251,7 @@ class MenuNavigator():
                 # Stop playing any theme that started
                 self._stopPlayingTheme()
                 # Now reload the screen to reflect the change
-                xbmc.executebuiltin("Container.Refresh")
+                executebuiltin("Container.Refresh")
                 return
 
     def _startPlayingExistingTheme(self, path):
@@ -262,17 +262,17 @@ class MenuNavigator():
             playlist = themeFiles.getThemePlaylist()
             # Stop playing any existing theme
             self._stopPlayingTheme()
-            xbmc.Player().play(playlist)
+            Player().play(playlist)
         else:
             log("No themes found for %s" % path)
         del themeFiles
 
     def _stopPlayingTheme(self):
         # Check if a tune is already playing
-        if xbmc.Player().isPlayingAudio():
-            xbmc.Player().stop()
-        while xbmc.Player().isPlayingAudio():
-            xbmc.sleep(5)
+        if Player().isPlayingAudio():
+            Player().stop()
+        while Player().isPlayingAudio():
+            sleep(5)
 
     # Moves a theme that is not in a theme folder to a theme folder
     def _moveToThemeFolder(self, directory):
@@ -294,7 +294,7 @@ class MenuNavigator():
                     try:
                         xbmcvfs.mkdir(targetpath)
                     except:
-                        log("fetchAllMissingThemes: Failed to create directory: %s" % targetpath, True, xbmc.LOGERROR)
+                        log("fetchAllMissingThemes: Failed to create directory: %s" % targetpath, True, LOGERROR)
                         break
                 else:
                     log("moveToThemeFolder: directory already exists %s" % targetpath)
@@ -399,4 +399,4 @@ if __name__ == '__main__':
             xbmcgui.Window(12003).setProperty("TvTunes_BrowserMissingThemesOnly", "true")
 
         # Now reload the screen to reflect the change
-        xbmc.executebuiltin("Container.Refresh")
+        executebuiltin("Container.Refresh")

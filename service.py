@@ -3,6 +3,7 @@ import os
 import sys
 import xbmc
 import xbmcaddon
+import xbmcvfs
 
 if sys.version_info >= (2, 7):
     import json
@@ -15,8 +16,8 @@ from resources.lib.settings import Settings
 from resources.lib.backend import TunesBackend
 
 ADDON = xbmcaddon.Addon(id='service.tvtunes')
-CWD = ADDON.getAddonInfo('path').decode("utf-8")
-LIB_DIR = xbmc.translatePath(os.path.join(CWD, 'resources', 'lib').encode("utf-8")).decode("utf-8")
+CWD = ADDON.getAddonInfo('path')
+LIB_DIR = xbmcvfs.translatePath(os.path.join(CWD, 'resources', 'lib'))
 
 
 # Class to detect when something in the system has changed

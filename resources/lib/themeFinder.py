@@ -15,17 +15,20 @@ if sys.version_info < (2, 7):
 else:
     import json as simplejson
 
-# Import the common settings
-from settings import Settings
-from settings import log
-from settings import os_path_join
-from settings import os_path_split
-from settings import list_dir
-from settings import dir_exists
-from settings import os_path_isfile
-from settings import normalize_string
+#from settings import log
+from resources.lib.utils import log_msg
 
-from VideoParser import VideoParser
+# Import the common settings
+from resources.lib.settings import Settings
+#from resources.lib.settings import log
+from resources.lib.settings import os_path_join
+from resources.lib.settings import os_path_split
+from resources.lib.settings import list_dir
+from resources.lib.settings import dir_exists
+from resources.lib.settings import os_path_isfile
+from resources.lib.settings import normalize_string
+
+from resources.lib.VideoParser import VideoParser
 
 
 #############################################
@@ -59,14 +62,14 @@ class NfoReader():
 
         # If this is a plugin path, then don't try and get the NFO file
         if "plugin://" in nfoFileName:
-            log("NfoReader: Plugin paths do not support NFO files: %s" % nfoFileName, self.debug_logging_enabled)
+            log_msg("NfoReader: Plugin paths do not support NFO files: %s" % nfoFileName, self.debug_logging_enabled)
             return
 
-        log("NfoReader: Searching for NFO file: %s" % nfoFileName, self.debug_logging_enabled)
+        log_msg("NfoReader: Searching for NFO file: %s" % nfoFileName, self.debug_logging_enabled)
 
         # Return False if file does not exist
         if not xbmcvfs.exists(nfoFileName):
-            log("NfoReader: No NFO file found: %s" % nfoFileName, self.debug_logging_enabled)
+            log_msg("NfoReader: No NFO file found: %s" % nfoFileName, self.debug_logging_enabled)
             return False
 
         returnValue = False
@@ -84,11 +87,11 @@ class NfoReader():
             nfoXml = ET.ElementTree(ET.fromstring(nfoFileStr))
             rootElement = nfoXml.getroot()
 
-            log("NfoReader: Root element is = %s" % rootElement.tag, self.debug_logging_enabled)
+            log_msg("NfoReader: Root element is = %s" % rootElement.tag, self.debug_logging_enabled)
 
             # Check which format if being used
             if rootElement.tag == "tvtunes":
-                log("NfoReader: TvTunes format NFO detected", self.debug_logging_enabled)
+                log_msg("NfoReader: TvTunes format NFO detected", self.debug_logging_enabled)
                 #    <tvtunes>
                 #        <file>theme.mp3</file>
                 #        <directory>c:\my\themes</directory>
@@ -106,7 +109,7 @@ class NfoReader():
                         if file.startswith('..') or (("/" not in file) and ("\\" not in file)):
                             # Make it a full path if it is not already
                             file = os_path_join(directory, file)
-                        log("NfoReader: file = %s" % file, self.debug_logging_enabled)
+                        log_msg("NfoReader: file = %s" % file, self.debug_logging_enabled)
                         self.themeFiles.append(file)
 
                 # There could be multiple directory entries, so loop through all of them
@@ -119,7 +122,7 @@ class NfoReader():
                         if dir.startswith('..') or (("/" not in dir) and ("\\" not in dir)):
                             # Make it a full path if it is not already
                             dir = os_path_join(directory, dir)
-                        log("NfoReader: directory = %s" % dir, self.debug_logging_enabled)
+                        log_msg("NfoReader: directory = %s" % dir, self.debug_logging_enabled)
                         self.themeDirs.append(dir)
 
                 # Check for the playlist files
@@ -143,12 +146,12 @@ class NfoReader():
             else:
                 self.displayName = None
                 self.orderKey = None
-                log("NfoReader: Unknown NFO format", self.debug_logging_enabled)
+                log_msg("NfoReader: Unknown NFO format", self.debug_logging_enabled)
 
             del nfoXml
         except:
-            log("NfoReader: Failed to process NFO: %s" % nfoFileName, True, xbmc.LOGERROR)
-            log("NfoReader: %s" % traceback.format_exc(), True, xbmc.LOGERROR)
+            log_msg("NfoReader: Failed to process NFO: %s" % nfoFileName, True, LOGERROR)
+            log_msg("NfoReader: %s" % traceback.format_exc(), True, LOGERROR)
             returnValue = False
 
         # Not that the entire NFO file has been read, see if we need to verify
@@ -160,7 +163,7 @@ class NfoReader():
                 if xbmcvfs.exists(nfoThemeFile):
                     existingThemeFiles.append(nfoThemeFile)
                 else:
-                    log("NfoReader: File does not exists, removing %s" % nfoThemeFile, self.debug_logging_enabled)
+                    log_msg("NfoReader: File does not exists, removing %s" % nfoThemeFile, self.debug_logging_enabled)
             self.themeFiles = existingThemeFiles
 
             # Check the theme directories to make sure they all exist
@@ -169,7 +172,7 @@ class NfoReader():
                 if dir_exists(nfoThemeDir):
                     existingThemeDir.append(nfoThemeDir)
                 else:
-                    log("NfoReader: Directory does not exists, removing %s" % nfoThemeDir, self.debug_logging_enabled)
+                    log_msg("NfoReader: Directory does not exists, removing %s" % nfoThemeDir, self.debug_logging_enabled)
             self.themeDirs = existingThemeDir
 
         return returnValue
@@ -200,9 +203,9 @@ class NfoReader():
                 playlistFile = localFile
             else:
                 # default to the music playlist directory if not local
-                playlistFile = os_path_join(xbmc.translatePath("special://musicplaylists"), playlistFile)
+                playlistFile = os_path_join(xbmcvfs.translatePath("special://musicplaylists"), playlistFile)
 
-        log("NfoReader: playlist file = %s" % playlistFile, self.debug_logging_enabled)
+        log_msg("NfoReader: playlist file = %s" % playlistFile, self.debug_logging_enabled)
 
         if xbmcvfs.exists(playlistFile):
             # Load the playlist into the Playlist object
@@ -216,12 +219,12 @@ class NfoReader():
                     file = xbmcPlaylist[i].getfilename()
                     i = i + 1
                     if (file is not None) and (file != ""):
-                        log("NfoReader: file from playlist = %s" % file, self.debug_logging_enabled)
+                        log_msg("NfoReader: file from playlist = %s" % file, self.debug_logging_enabled)
                         self.themeFiles.append(file)
             except:
-                log("NfoReader: playlist file processing error = %s" % playlistFile, True, xbmc.LOGERROR)
+                log_msg("NfoReader: playlist file processing error = %s" % playlistFile, True, xbmc.LOGERROR)
         else:
-            log("NfoReader: playlist file not found = %s" % playlistFile, self.debug_logging_enabled)
+            log_msg("NfoReader: playlist file not found = %s" % playlistFile, self.debug_logging_enabled)
 
     # Adds tracks in a Smart playlist to the list of theme files to play
     def _addFilesFromSmartPlaylist(self, playlistFile):
@@ -236,7 +239,7 @@ class NfoReader():
             # Get the list of movies paths from the movie set
             items = json_query['result']['files']
             for item in items:
-                log("NfoReader: Adding From Smart Playlist: %s" % item['file'], self.debug_logging_enabled)
+                log_msg("NfoReader: Adding From Smart Playlist: %s" % item['file'], self.debug_logging_enabled)
                 self.themeFiles.append(item['file'])
 
 
@@ -260,7 +263,7 @@ class ThemeFiles():
                 # Make sure that the path passed in has not already been converted
                 if customRoot not in self.rawPath:
                     self.rawPath = os_path_join(customRoot, normalize_string(videotitle))
-                    log("ThemeFiles: Setting custom path to %s" % self.rawPath, self.debug_logging_enabled)
+                    log_msg("ThemeFiles: Setting custom path to %s" % self.rawPath, self.debug_logging_enabled)
 
             if (pathList is not None) and (len(pathList) > 0):
                 self.themeFiles = []
@@ -350,13 +353,13 @@ class ThemeFiles():
             filename = playlist[0].getfilename()
             duration = int(playlist[0].getduration())
 
-            log("ThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
+            log_msg("ThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
 
             # Check if the duration of the file is showing as Zero, this means we need to
             # try and find out the duration ourself
             if duration < 1:
                 duration = VideoParser().getVideoLength(filename)
-                log("ThemeFiles: Manual find of duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
+                log_msg("ThemeFiles: Manual find of duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
 
             if duration > 10:
                 listitem = xbmcgui.ListItem()
@@ -367,7 +370,7 @@ class ThemeFiles():
                     randomStart = random.randint(0, int(duration * 0.75))
                 listitem.setProperty('StartOffset', str(randomStart))
 
-                log("ThemeFiles: Setting Random start of %d for %s" % (randomStart, filename), self.debug_logging_enabled)
+                log_msg("ThemeFiles: Setting Random start of %d for %s" % (randomStart, filename), self.debug_logging_enabled)
 
                 # Remove the old item from the playlist
                 playlist.remove(filename)
@@ -388,14 +391,14 @@ class ThemeFiles():
 
         if Settings.isSmbEnabled() and not ('@' in workingPath):
             if workingPath.startswith("smb://"):
-                log("### Try authentication share")
+                log_msg("### Try authentication share")
                 workingPath = workingPath.replace("smb://", "smb://%s:%s@" % (Settings.getSmbUser(), Settings.getSmbPassword()))
-                log("### %s" % workingPath)
+                log_msg("### %s" % workingPath)
             # Also handle the apple format
             elif workingPath.startswith("afp://"):
-                log("### Try authentication share")
+                log_msg("### Try authentication share")
                 workingPath = workingPath.replace("afp://", "afp://%s:%s@" % (Settings.getSmbUser(), Settings.getSmbPassword()))
-                log("### %s" % workingPath)
+                log_msg("### %s" % workingPath)
 
         # handle episodes stored as rar files
         if workingPath.startswith("rar://"):
@@ -431,7 +434,7 @@ class ThemeFiles():
         # directory is above it
         if len(themeFiles) < 1:
             if ('VIDEO_TS' in rawPath) or ('BDMV' in rawPath):
-                log("ThemeFiles: Found VIDEO_TS in path: Correcting the path for DVDR tv shows", self.debug_logging_enabled)
+                log_msg("ThemeFiles: Found VIDEO_TS in path: Correcting the path for DVDR tv shows", self.debug_logging_enabled)
                 themeDir = self._getUsablePath(rawPath)
                 themeDir = os_path_split(themeDir)[0]
                 themeDir = os_path_join(themeDir, Settings.getThemeDirectory())
@@ -455,7 +458,7 @@ class ThemeFiles():
         if len(themeList) < 1:
             # TV shows stored as ripped disc folders
             if ('VIDEO_TS' in workingPath) or ('BDMV' in workingPath):
-                log("ThemeFiles: Found VIDEO_TS or BDMV in path: Correcting the path for DVDR tv shows", self.debug_logging_enabled)
+                log_msg("ThemeFiles: Found VIDEO_TS or BDMV in path: Correcting the path for DVDR tv shows", self.debug_logging_enabled)
                 workingPath = os_path_split(workingPath)[0]
                 themeList = self._getThemeFiles(workingPath)
                 if len(themeList) < 1:
@@ -475,8 +478,8 @@ class ThemeFiles():
                 if len(themeList) < 1:
                     themeList = self._getThemeFiles(workingPath)
 
-        log("ThemeFiles: Playlist size = %d" % len(themeList), self.debug_logging_enabled)
-        log("ThemeFiles: Working Path = %s" % workingPath, self.debug_logging_enabled)
+        log_msg("ThemeFiles: Playlist size = %d" % len(themeList), self.debug_logging_enabled)
+        log_msg("ThemeFiles: Working Path = %s" % workingPath, self.debug_logging_enabled)
 
         return themeList
 
@@ -504,12 +507,12 @@ class ThemeFiles():
         del nfoRead
 
         themeRegex = Settings.getThemeFileRegEx(directory, extensionOnly, self.audioOnly)
-        log("ThemeFiles: Searching %s for %s" % (directory, themeRegex), self.debug_logging_enabled)
+        log_msg("ThemeFiles: Searching %s for %s" % (directory, themeRegex), self.debug_logging_enabled)
 
         # Make sure that the path does not point to a plugin, as we are checking the
         # file-system for themes, not plugins. This can be the case with Emby
         if "plugin://" in directory:
-            log("ThemeFiles: Plugin paths do not support theme files: %s" % directory, self.debug_logging_enabled)
+            log_msg("ThemeFiles: Plugin paths do not support theme files: %s" % directory, self.debug_logging_enabled)
         else:
             # check if the directory exists before searching
             if dir_exists(directory):
@@ -518,7 +521,7 @@ class ThemeFiles():
                     m = re.search(themeRegex, aFile, re.IGNORECASE)
                     if m:
                         path = os_path_join(directory, aFile)
-                        log("ThemeFiles: Found match: %s" % path, self.debug_logging_enabled)
+                        log_msg("ThemeFiles: Found match: %s" % path, self.debug_logging_enabled)
                         # Add the theme file to the list
                         themeFiles.append(path)
                 # Check to see if any themes were found, and if not see if we should try
@@ -529,7 +532,7 @@ class ThemeFiles():
                         m = re.search(trailerRegEx, aFile, re.IGNORECASE)
                         if m:
                             path = os_path_join(directory, aFile)
-                            log("ThemeFiles: Found trailer match: %s" % path, self.debug_logging_enabled)
+                            log_msg("ThemeFiles: Found trailer match: %s" % path, self.debug_logging_enabled)
                             # Add the trailer file to the list
                             themeFiles.append(path)
 
@@ -575,7 +578,7 @@ class ThemeFiles():
         # Check if we need to only return video themes if one exists
         # and we don't want audio themes in this case
         if Settings.isVideoThemesOnlyIfOneExists():
-            log("ThemeFiles: Removing non video themes", self.debug_logging_enabled)
+            log_msg("ThemeFiles: Removing non video themes", self.debug_logging_enabled)
             self.themeFiles = videoThemes
         elif Settings.isVideoThemesFirst():
             # If we want to shuffle the tracks, then do this before we join the
@@ -639,7 +642,7 @@ class MusicThemeFiles():
         # Take the list of files and create a playlist from them
         # Needs to be a Music playlist otherwise repeat will not work
         # via the JSON interface
-        playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+        playlist = PlayList(PLAYLIST_MUSIC)
         playlist.clear()
         for aFile in self.themeFiles:
             # Add the theme file to a playlist
@@ -664,13 +667,13 @@ class MusicThemeFiles():
             filename = playlist[0].getfilename()
             duration = int(playlist[0].getduration())
 
-            log("MusicThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
+            log_msg("MusicThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
 
             # Check if the duration of the file is showing as Zero, this means we need to
             # try and find out the duration ourself
             if duration < 1:
                 duration = VideoParser().getVideoLength(filename)
-                log("MusicThemeFiles: Manual find of duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
+                log_msg("MusicThemeFiles: Manual find of duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
 
             if duration > 10:
                 listitem = xbmcgui.ListItem()
@@ -681,7 +684,7 @@ class MusicThemeFiles():
                     randomStart = random.randint(0, int(duration * 0.75))
                 listitem.setProperty('StartOffset', str(randomStart))
 
-                log("MusicThemeFiles: Setting Random start of %d for %s" % (randomStart, filename), self.debug_logging_enabled)
+                log_msg("MusicThemeFiles: Setting Random start of %d for %s" % (randomStart, filename), self.debug_logging_enabled)
 
                 # Remove the old item from the playlist
                 playlist.remove(filename)
@@ -697,14 +700,14 @@ class MusicThemeFiles():
     def _getThemesForActiveItem(self):
         themes = []
         # There could be several sections for the music library so check the different options
-        albumArtist = xbmc.getInfoLabel('ListItem.AlbumArtist')
-        log("MusicThemeFiles: AlbumArtist is %s" % albumArtist, self.debug_logging_enabled)
+        albumArtist = getInfoLabel('ListItem.AlbumArtist')
+        log_msg("MusicThemeFiles: AlbumArtist is %s" % albumArtist, self.debug_logging_enabled)
 
-        artist = xbmc.getInfoLabel('ListItem.Artist')
-        log("MusicThemeFiles: Artist is %s" % artist, self.debug_logging_enabled)
+        artist = getInfoLabel('ListItem.Artist')
+        log_msg("MusicThemeFiles: Artist is %s" % artist, self.debug_logging_enabled)
 
-        album = xbmc.getInfoLabel('ListItem.Album')
-        log("MusicThemeFiles: Album is %s" % album, self.debug_logging_enabled)
+        album = getInfoLabel('ListItem.Album')
+        log_msg("MusicThemeFiles: Album is %s" % album, self.debug_logging_enabled)
 
         # Now build up the JSON command using the values we have
         filterValues = []
@@ -722,19 +725,19 @@ class MusicThemeFiles():
 
         # Check to ensure there is some music information to search for
         if len(filterValues) < 1:
-            log("MusicThemeFiles: No ListItem information for music", self.debug_logging_enabled)
+            log_msg("MusicThemeFiles: No ListItem information for music", self.debug_logging_enabled)
         else:
             # Join all the filters together
             filterStr = ', '.join(filterValues)
             cmd = '{"jsonrpc": "2.0", "method": "AudioLibrary.GetSongs", "params": {"properties": ["title", "file"], "filter": { "and": [%s] }},"id": 1 }' % filterStr
             json_query = xbmc.executeJSONRPC(cmd)
             json_query = simplejson.loads(json_query)
-            log("MusicThemeFiles: json reply %s" % str(json_query), self.debug_logging_enabled)
+            log_msg("MusicThemeFiles: json reply %s" % str(json_query), self.debug_logging_enabled)
             if ("result" in json_query) and ('songs' in json_query['result']):
                 # Get the list of movies paths from the movie set
                 items = json_query['result']['songs']
                 for item in items:
-                    log("MusicThemeFiles: Audio Theme file: %s" % item['file'], self.debug_logging_enabled)
+                    log_msg("MusicThemeFiles: Audio Theme file: %s" % item['file'], self.debug_logging_enabled)
                     themes.append(item['file'])
 
         return themes

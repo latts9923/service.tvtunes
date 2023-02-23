@@ -11,10 +11,13 @@ if sys.version_info < (2, 7):
 else:
     import json as simplejson
 
+#from settings import log
+from resources.lib.utils import log_msg
+
 # Import the common settings
-from settings import Settings
-from settings import log
-from settings import WindowShowing
+from resources.lib.settings import Settings
+#from resources.lib.settings import log
+from resources.lib.settings import WindowShowing
 
 
 ###################################
@@ -57,7 +60,7 @@ class ThemePlayer(xbmc.Player):
         # this instance of the player that started the theme, so check to ensure
         # TvTunes is actually the responsible for starting the player
         if self.tvtunesPlayerStarted:
-            log("ThemePlayer: Received onPlayBackStopped")
+            log_msg("ThemePlayer: Received onPlayBackStopped")
             self.restoreSettings()
         xbmc.Player.onPlayBackStopped(self)
 
@@ -71,21 +74,21 @@ class ThemePlayer(xbmc.Player):
             # need to stop the current one
             if not self.isPlayingTheme():
                 self.restoreSettings()
-        xbmc.Player.onAVStarted(self)
+        xbmc.Player.onPlayBackStarted(self)
 
     def restoreSettings(self):
-        log("ThemePlayer: Restoring player settings")
+        log_msg("ThemePlayer: Restoring player settings")
         self.tvtunesPlayerStarted = False
 
         # Check if the refresh rate need to be restored
         if self.original_refreshrate != 0:
             # Disable the refresh rate setting
             xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Settings.SetSettingValue",  "params": { "setting": "videoplayer.adjustrefreshrate", "value": %d }, "id": 1}' % self.original_refreshrate)
-            log("ThemePlayer: Restored refresh rate to %d" % self.original_refreshrate)
+            log_msg("ThemePlayer: Restored refresh rate to %d" % self.original_refreshrate)
             self.original_refreshrate = 0
 
         # Restore repeat state
-        log("ThemePlayer: Restoring setting repeat to RepeatOff")
+        log_msg("ThemePlayer: Restoring setting repeat to RepeatOff")
         # Need to use the player control as the json one did not seem to work with
         # videos, but we also call the JSON version as that catches more cases where
         # the video has stopped - it's strange - but it works
@@ -109,16 +112,16 @@ class ThemePlayer(xbmc.Player):
                 self._setVolume(self.original_volume)
             # Record that the volume has been restored
             self.hasChangedVolume = False
-            log("ThemePlayer: Restored volume to %d" % self.original_volume)
+            log_msg("ThemePlayer: Restored volume to %d" % self.original_volume)
 
         # Record the time that playing was started (0 is stopped)
         self.startTime = 0
 
     def stop(self):
-        log("ThemePlayer: stop called")
+        log_msg("ThemePlayer: stop called")
         self.tvtunesPlayerStarted = False
 
-        log("ThemePlayer: Restoring setting repeat to RepeatOff")
+        log_msg("ThemePlayer: Restoring setting repeat to RepeatOff")
         # Need to use the player control as the json one did not seem to work with
         # videos, but we also call the JSON version as that catches more cases where
         # the video has stopped - it's strange - but it works
@@ -163,18 +166,18 @@ class ThemePlayer(xbmc.Player):
 
                 # Wait until playing has started
                 maxLoop = 100
-                while (not self.isPlaying()) and (not xbmc.abortRequested) and (maxLoop > 0):
+                while (not self.isPlaying()) and (not xbmc.Monitor().abortRequested) and (maxLoop > 0):
                     maxLoop = maxLoop - 1
                     xbmc.sleep(30)
 
-                for step in range(0, (numSteps - 1)):
+                for step in range(0, (int(numSteps) - 1)):
                     # If the system is going to be shut down then we need to reset
                     # everything as quickly as possible
-                    if WindowShowing.isShutdownMenu() or xbmc.abortRequested:
-                        log("ThemePlayer: Shutdown menu detected, cancelling fade in")
+                    if WindowShowing.isShutdownMenu() or xbmc.Monitor().abortRequested:
+                        log_msg("ThemePlayer: Shutdown menu detected, cancelling fade in")
                         break
                     vol = cur_vol_perc + vol_step
-                    log("ThemePlayer: fadeIn_vol: %s" % str(vol))
+                    log_msg("ThemePlayer: fadeIn_vol: %s" % str(vol))
                     self._setVolume(vol)
                     cur_vol_perc = vol
                     xbmc.sleep(200)
@@ -186,7 +189,7 @@ class ThemePlayer(xbmc.Player):
             if Settings.isLoop():
                 xbmc.executebuiltin("PlayerControl(RepeatAll)")
                 # We no longer use the JSON method to repeat as it does not work with videos
-                # xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.SetRepeat", "params": {"playerid": 0, "repeat": "all" }, "id": 1 }')
+                # executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.SetRepeat", "params": {"playerid": 0, "repeat": "all" }, "id": 1 }')
 
                 # If we had a random start and we are looping then we need to make sure
                 # when it comes to play the theme for a second time it starts at the beginning
@@ -196,7 +199,7 @@ class ThemePlayer(xbmc.Player):
             else:
                 xbmc.executebuiltin("PlayerControl(RepeatOff)")
                 # We no longer use the JSON method to repeat as it does not work with videos
-                # xbmc.executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.SetRepeat", "params": {"playerid": 0, "repeat": "off" }, "id": 1 }')
+                # executeJSONRPC('{ "jsonrpc": "2.0", "method": "Player.SetRepeat", "params": {"playerid": 0, "repeat": "off" }, "id": 1 }')
 
             # Record the time that playing was started
             self.startTime = int(time.time())
@@ -207,7 +210,7 @@ class ThemePlayer(xbmc.Player):
             # Save off the number of items in the playlist
             if item is not None:
                 self.playlistSize = item.size()
-                log("ThemePlayer: Playlist size = %d" % self.playlistSize)
+                log_msg("ThemePlayer: Playlist size = %d" % self.playlistSize)
 
                 # Store a list of all the tracks in the playlist
                 try:
@@ -216,7 +219,7 @@ class ThemePlayer(xbmc.Player):
                         self.playListItems.append(item[i].getfilename())
                         i = i + 1
                 except:
-                    log("ThemePlayer: Failed to save off playlist")
+                    log_msg("ThemePlayer: Failed to save off playlist")
 
                 # Check if we are limiting each track in the list
                 if not Settings.isLoop():
@@ -236,7 +239,7 @@ class ThemePlayer(xbmc.Player):
             # Get the volume value
             volume = json_query['result']['volume']
 
-        log("ThemePlayer: current volume: %s%%" % str(volume))
+        log_msg("ThemePlayer: current volume: %s%%" % str(volume))
         return volume
 
     # Sets the volume in the range 0-100
@@ -252,12 +255,12 @@ class ThemePlayer(xbmc.Player):
             if reducedVolume > 0:
                 # Save the volume from before any alterations
                 self.original_volume = self._getVolume()
-                log("ThemePlayer: volume goal: %d%% " % reducedVolume)
+                log_msg("ThemePlayer: volume goal: %d%% " % reducedVolume)
                 self._setVolume(reducedVolume)
             else:
-                log("ThemePlayer: No reduced volume option set")
+                log_msg("ThemePlayer: No reduced volume option set")
         except:
-            log("ThemePlayer: %s" % traceback.format_exc(), True, xbmc.LOGERROR)
+            log_msg("ThemePlayer: %s" % traceback.format_exc(), True, LOGERROR)
 
     # Graceful end of the playing, will fade if set to do so
     def endPlaying(self, fastFade=False, slowFade=False):
@@ -281,14 +284,14 @@ class ThemePlayer(xbmc.Player):
 
             vol_step = cur_vol / numSteps
             # do not mute completely else the mute icon shows up
-            for step in range(0, (numSteps - 1)):
+            for step in range(0, int(numSteps - 1)):
                 # If the system is going to be shut down then we need to reset
                 # everything as quickly as possible
-                if WindowShowing.isShutdownMenu() or xbmc.abortRequested:
-                    log("ThemePlayer: Shutdown menu detected, cancelling fade out")
+                if WindowShowing.isShutdownMenu() or xbmc.Monitor().abortRequested():
+                    log_msg("ThemePlayer: Shutdown menu detected, cancelling fade out")
                     break
                 vol = cur_vol - vol_step
-                log("ThemePlayer: fadeOut_vol: %s" % str(vol))
+                log_msg("ThemePlayer: fadeOut_vol: %s" % str(vol))
                 self._setVolume(vol)
                 cur_vol = vol
                 xbmc.sleep(200)
@@ -308,11 +311,11 @@ class ThemePlayer(xbmc.Player):
                     if Settings.isVideoFile(self.playListItems[0]):
                         # So we know that we did play a video, now we are
                         # playing an audio file, so set repeat on the current item
-                        log("ThemePlayer: Setting single track to repeat %s" % self.playListItems[1])
-                        xbmc.executebuiltin("PlayerControl(RepeatOne)")
+                        log_msg("ThemePlayer: Setting single track to repeat %s" % self.playListItems[1])
+                        executebuiltin("PlayerControl(RepeatOne)")
                         self.repeatOneSet = True
         except:
-            log("ThemePlayer: Failed to check audio repeat after video")
+            log_msg("ThemePlayer: Failed to check audio repeat after video")
 
         if self.isPlaying() and (self.startTime > 0):
             # Get the current time
@@ -334,7 +337,7 @@ class ThemePlayer(xbmc.Player):
                 trackLimit = Settings.getTrackLengthLimit()
                 if trackLimit > 0:
                     if currTime > self.trackEndTime:
-                        log("ThemePlayer: Skipping to next track after %s" % self.getPlayingFile())
+                        log_msg("ThemePlayer: Skipping to next track after %s" % self.getPlayingFile())
                         self.playnext()
                         if self.remainingTracks != -1:
                             self.remainingTracks = self.remainingTracks - 1
@@ -353,12 +356,12 @@ class ThemePlayer(xbmc.Player):
         # to get the length of
         try:
             trackLength = int(self.getTotalTime())
-            log("ThemePlayer: track length = %d" % trackLength)
+            log_msg("ThemePlayer: track length = %d" % trackLength)
             if trackLimit > trackLength and (Settings.isLoop() or self.remainingTracks > 0):
                 self.remainingTracks = self.remainingTracks - 1
                 self.trackEndTime = self.trackEndTime + trackLength
         except:
-            log("ThemePlayer: Failed to get track total time as not playing")
+            log_msg("ThemePlayer: Failed to get track total time as not playing")
             self.trackEndTime = -1
 
     # Check if TvTunes is playing a video theme
@@ -375,7 +378,7 @@ class ThemePlayer(xbmc.Player):
             # Get the currently playing file
             filePlaying = self.getPlayingFile()
         except:
-            log("ThemePlayer: Exception when checking if theme is playing")
+            log_msg("ThemePlayer: Exception when checking if theme is playing")
 
         if filePlaying in self.playListItems:
             return True
@@ -391,7 +394,7 @@ class ThemePlayer(xbmc.Player):
             # Get the currently playing file
             filePlaying = self.getPlayingFile()
         except:
-            log("ThemePlayer: Exception when checking if trailer theme is playing")
+            log_msg("ThemePlayer: Exception when checking if trailer theme is playing")
 
         if filePlaying in self.playListItems:
             # Check if it is a trailer theme
@@ -407,7 +410,7 @@ class ThemePlayer(xbmc.Player):
             self.original_refreshrate = 0
             return
 
-        log("ThemePlayer: Checking for update of refresh rate")
+        log_msg("ThemePlayer: Checking for update of refresh rate")
 
         try:
             # Check if we have any videos in the PlayList
@@ -427,12 +430,12 @@ class ThemePlayer(xbmc.Player):
                     if 'value' in data['result']:
                         self.original_refreshrate = data['result']['value']
                         # Check if the refresh rate is currently set
-                        log("ThemePlayer: Video refresh rate currently set to %d" % self.original_refreshrate)
+                        log_msg("ThemePlayer: Video refresh rate currently set to %d" % self.original_refreshrate)
 
                 # Check if the refresh rate is currently set, if it is, then we need
                 if self.original_refreshrate != 0:
                     # Disable the refresh rate setting
-                    log("ThemePlayer: Disabling refresh rate")
+                    log_msg("ThemePlayer: Disabling refresh rate")
                     xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Settings.SetSettingValue",  "params": { "setting": "videoplayer.adjustrefreshrate", "value": 0 }, "id": 1}')
         except:
-            log("ThemePlayer: Failed to process video refresh")
+            log_msg("ThemePlayer: Failed to process video refresh")
