@@ -3,17 +3,19 @@ import time
 import sys
 import traceback
 import xbmc
+import xbmcaddon
 import xbmcgui
 
 # Add JSON support for queries
-if sys.version_info < (2, 7):
-    import simplejson
+if sys.version_info.major == 3:
+    import simplejson as json
 else:
-    import json as simplejson
+    import json
 
 # Import the common settings
 from settings import Settings
-from settings import log
+#from settings import log
+from xlogger import Logger
 from settings import os_path_join
 from settings import os_path_split
 from settings import normalize_string
@@ -22,6 +24,11 @@ from settings import WindowShowing
 from themeFinder import ThemeFiles
 from themeFinder import MusicThemeFiles
 from themePlayer import ThemePlayer
+
+ADDON = xbmcaddon.Addon(id='service.tvtunes')
+preamble     = '[TV Tunes]'
+logdebug     = ADDON.getSetting( "logEnabled" )
+lw      = Logger( preamble=preamble, logdebug=logdebug )
 
 
 #########################################################
@@ -47,15 +54,15 @@ class DelayedStartTheme():
         currentTime = int(time.time())
 
         if themes != self.themesToStart:
-            log("DelayedStartTheme: Themes do not match, new anchor = %s" % str(currentTime))
+            lw.log("DelayedStartTheme: Themes do not match, new anchor = %s" % str(currentTime))
             self.themesToStart = themes
             # Reset the current time as we need the delay from here
             self.anchorTime = currentTime
         else:
-            log("DelayedStartTheme: Target time = %s current time = %s" % (str(self.anchorTime + delaySeconds), str(currentTime)))
+            lw.log("DelayedStartTheme: Target time = %s current time = %s" % (str(self.anchorTime + delaySeconds), str(currentTime)))
             # Themes are the same, see if it is time to play the the theme yet
             if currentTime > (self.anchorTime + delaySeconds):
-                log("DelayedStartTheme: Start playing")
+                lw.log("DelayedStartTheme: Start playing")
                 # Now we are going to start the theme, clear the values
                 self.clear()
                 return True
@@ -69,7 +76,7 @@ class DelayedStartTheme():
     def _checkListPlayingDelay(self, themes):
         # Check if we are playing themes on the list view, in which case we will want to delay them
         if (Settings.isPlayMovieList() and WindowShowing.isMovies()) or (Settings.isPlayTvShowList() and WindowShowing.isTvShowTitles()) or (Settings.isPlayMusicVideoList() and WindowShowing.isMusicVideoTitles()):
-            log("DelayedStartTheme: Movie List playing delay detected, anchorTime = %s" % str(self.anchorTime))
+            lw.log("DelayedStartTheme: Movie List playing delay detected, anchorTime = %s" % str(self.anchorTime))
             if themes != self.themesToStart:
                 # Theme selection has changed
                 self.themesToStart = themes
@@ -93,7 +100,7 @@ class DelayedStartTheme():
 class TunesBackend():
     def __init__(self):
         self.themePlayer = ThemePlayer()
-        log("### starting TvTunes Backend ###")
+        lw.log( ['### starting TvTunes Backend ###'], xbmc.LOGNOTICE )
         self.newThemeFiles = ThemeFiles("")
         self.oldThemeFiles = ThemeFiles("")
         self.prevThemeFiles = ThemeFiles("")
@@ -127,14 +134,14 @@ class TunesBackend():
             # "Use Visualization if Playing Audio" is disabled
             if WindowShowing.isScreensaver():
                 if self.isAlive:
-                    log("TunesBackend: Screensaver active")
+                    lw.log("TunesBackend: Screensaver active")
                     self.stop(fastFade=True)
 
                     # It may be possible that we stopped for the screen-saver about to kick in
                     # If we are using Gotham or higher, it is possible for us to re-kick off the
                     # screen-saver, otherwise the action of us stopping the theme will reset the
                     # timeout and the user will have to wait longer
-                    log("TunesBackend: Restarting screensaver that TvTunes stopped")
+                    lw.log("TunesBackend: Restarting screensaver that TvTunes stopped")
                     xbmc.executebuiltin("ActivateScreensaver", True)
                 continue
 
@@ -144,7 +151,7 @@ class TunesBackend():
                 continue
 
             if (not WindowShowing.isVideoLibrary()) and (not WindowShowing.isMusicSection()):
-                log("TunesBackend: Video Library no longer visible", logVideoLibraryNotShowing)
+                lw.log("TunesBackend: Video Library no longer visible", logVideoLibraryNotShowing)
                 logVideoLibraryNotShowing = False
                 # End playing cleanly (including any fade out) and then stop everything
                 self.stop()
@@ -160,8 +167,8 @@ class TunesBackend():
 
             # Check if the file path has changed, if so there is a new file to play
             if self.newThemeFiles != self.oldThemeFiles and self.newThemeFiles.hasThemes():
-                log("TunesBackend: old path: %s" % self.oldThemeFiles.getPath())
-                log("TunesBackend: new path: %s" % self.newThemeFiles.getPath())
+                lw.log("TunesBackend: old path: %s" % self.oldThemeFiles.getPath())
+                lw.log("TunesBackend: new path: %s" % self.newThemeFiles.getPath())
                 if self.start_playing():
                     # Now that playing has started, update the current themes that are being used
                     self.oldThemeFiles = self.newThemeFiles
@@ -172,7 +179,7 @@ class TunesBackend():
                 if self.themePlayer.isPlayingTheme():
                     # There is no theme at this location, so make sure we are stopped
                     if not self.newThemeFiles.hasThemes():
-                        log("TunesBackend: No themes to play for current item")
+                        lw.log("TunesBackend: No themes to play for current item")
                         self.themePlayer.endPlaying()
                         self.oldThemeFiles.clear()
                         self.prevThemeFiles.clear()
@@ -192,7 +199,7 @@ class TunesBackend():
                             break
 
                     if not themeIsStillPlaying:
-                        log("TunesBackend: playing ended, restoring settings")
+                        lw.log("TunesBackend: playing ended, restoring settings")
                         self.themePlayer.restoreSettings()
                         self.isAlive = False
 
@@ -280,7 +287,7 @@ class TunesBackend():
             debug_logging_enabled = True
             self.lastLoggedThemePath = themePath
 
-        log("TunesBackend: themePath = %s" % themePath, debug_logging_enabled)
+        lw.log("TunesBackend: themePath = %s" % themePath, debug_logging_enabled)
 
         # Check if the selection is a Movie Set
         if WindowShowing.isMovieSet():
@@ -336,10 +343,10 @@ class TunesBackend():
                                     # We will already have checked the parent path as well
                                     if (tvshowPath != themePath) and (tvshowPath != os_path_split(themePath)[0]):
                                         # So we know that we haven't checked the root of this TV Show yet
-                                        log("TunesBackend: Checking root TV Show Path = %s" % tvshowPath, debug_logging_enabled)
+                                        lw.log("TunesBackend: Checking root TV Show Path = %s" % tvshowPath, debug_logging_enabled)
                                         themefile = ThemeFiles(tvshowPath, debug_logging_enabled=debug_logging_enabled)
                         except:
-                            log("TunesBackend: Failed to check root TV Show %s" % traceback.format_exc(), debug_logging_enabled)
+                            lw.log("TunesBackend: Failed to check root TV Show %s" % traceback.format_exc(), debug_logging_enabled)
 
         return themefile
 
@@ -351,16 +358,16 @@ class TunesBackend():
         # Check if the selection is a Movie Set
         if WindowShowing.isMovieSet():
             # Get Movie Set Data Base ID
-            dbid = xbmc.getInfoLabel("ListItem.DBID")
+            dbid = xbmc.getInfoLabel("ListItem.DBID").decode('utf-8')
             # Get movies from Movie Set
-            json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovieSetDetails", "params": {"setid": %s, "properties": [ "thumbnail" ], "movies": { "properties":  [ "file", "title"], "sort": { "order": "ascending",  "method": "title" }} },"id": 1 }' % dbid)
-            json_query = unicode(json_query, 'utf-8', errors='ignore')
-            json_query = simplejson.loads(json_query)
+            json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.GetMovieSetDetails", "params": {"setid": %s, "properties": ["title", "thumbnail"], "movies": { "properties": ["file", "title"], "sort": { "order": "ascending",  "method": "title" }} },"id": 1 }' % dbid).decode('utf-8')
+            #json_query = unicode(json_query, 'utf-8', errors='ignore').decode('utf-8')
+            json_query = json.loads(json_query)
             if ("result" in json_query) and ('setdetails' in json_query['result']):
                 # Get the list of movies paths from the movie set
                 items = json_query['result']['setdetails']['movies']
                 for item in items:
-                    log("TunesBackend: Movie Set file (%s): %s" % (item['title'], item['file']))
+                    lw.log( ['TunesBackend: Movie Set file (%s): %s' % (item['title'], item['file'])], xbmc.LOGNOTICE )
                     movieSetMap[item['title']] = item['file']
 
         return movieSetMap
@@ -371,7 +378,7 @@ class TunesBackend():
 
         if self.newThemeFiles.hasThemes():
             if self.newThemeFiles == self.prevThemeFiles:
-                log("TunesBackend: Not playing the same files twice %s" % self.newThemeFiles.getPath())
+                lw.log("TunesBackend: Not playing the same files twice %s" % self.newThemeFiles.getPath())
                 return True  # don't play the same tune twice (when moving from season to episodes etc)
             # Value that will force a quicker than normal fade in and out
             # this is needed if switching from one theme to the next, we
@@ -383,7 +390,7 @@ class TunesBackend():
             # Stop any audio playing
             if self.themePlayer.isPlayingTheme():
                 fastFadeNeeded = True
-                log("TunesBackend: Stopping previous theme: %s" % self.prevThemeFiles.getPath())
+                lw.log("TunesBackend: Stopping previous theme: %s" % self.prevThemeFiles.getPath())
                 self.themePlayer.endPlaying(fastFade=fastFadeNeeded)
 
             # Check if this should be delayed
@@ -398,12 +405,12 @@ class TunesBackend():
             # Store the new theme that is being played
             self.prevThemeFiles = self.newThemeFiles
             self.isAlive = True
-            log("TunesBackend: start playing %s" % self.newThemeFiles.getPath())
+            lw.log( ['TunesBackend: start playing %s' % self.newThemeFiles.getPath()], xbmc.LOGNOTICE )
             self.themePlayer.play(playlist, fastFade=fastFadeNeeded)
             # Set the option so other add-ons can work out if TvTunes is playing a theme
             xbmcgui.Window(10025).setProperty("TvTunesIsRunning", "true")
         else:
-            log("TunesBackend: no themes found for %s" % self.newThemeFiles.getPath())
+            lw.log("TunesBackend: no themes found for %s" % self.newThemeFiles.getPath())
         return True
 
     def stop(self, immediate=False, fastFade=False):
@@ -411,12 +418,12 @@ class TunesBackend():
             # If video is playing, check to see if it is a theme video
             if self.themePlayer.isPlayingTheme():
                 if immediate:
-                    log("TunesBackend: Stop playing")
+                    lw.log("TunesBackend: Stop playing")
                     self.themePlayer.stop()
                     while self.themePlayer.isPlaying():
                         xbmc.sleep(50)
                 else:
-                    log("TunesBackend: Ending playing")
+                    lw.log("TunesBackend: Ending playing")
                     self.themePlayer.endPlaying(fastFade)
 
             self.isAlive = False

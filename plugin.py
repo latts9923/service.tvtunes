@@ -147,8 +147,8 @@ class MenuNavigator():
         if target == MenuNavigator.MUSICVIDEOS:
             origTitleRequest = ''
 
-        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
-#        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "VideoLibrary.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "imdbnumber", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
+        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Videos.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
+#        json_query = xbmc.executeJSONRPC('{"jsonrpc": "2.0", "method": "Videos.%s", "params": {"properties": ["title", "file", "thumbnail", "fanart", "imdbnumber", "year"%s], "sort": { "method": "title" } }, "id": 1}' % (jsonGet, origTitleRequest))
         json_query = unicode(json_query, 'utf-8', errors='ignore')
         json_response = simplejson.loads(json_query)
         log(json_response)

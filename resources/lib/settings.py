@@ -5,9 +5,13 @@ import xbmc
 import xbmcaddon
 import xbmcvfs
 import xbmcgui
+from xlogger import Logger
 
 ADDON = xbmcaddon.Addon(id='service.tvtunes')
 ADDON_ID = ADDON.getAddonInfo('id')
+preamble     = '[TV Tunes]'
+logdebug     = ADDON.getSetting( "logEnabled" )
+lw      = Logger( preamble=preamble, logdebug=logdebug )
 
 
 # Common logging module
@@ -223,7 +227,7 @@ class WindowShowing():
             if WindowShowing.isHome():
                 # An addon may have forgotten to undet the flag, or crashed
                 # force the unsetting of the flag
-                log("WindowShowing: Removing TvTunesContinuePlaying property when on Home screen")
+                lw.log("WindowShowing: Removing TvTunesContinuePlaying property when on Home screen")
                 xbmcgui.Window(12000).clearProperty("TvTunesContinuePlaying")
                 return False
 
@@ -288,8 +292,8 @@ class WindowShowing():
 
     @staticmethod
     def isMovieSet():
-        folderPathId = "videodb://movies/sets/"
-        return xbmc.getCondVisibility("!IsEmpty(ListItem.DBID) + SubString(ListItem.Path," + folderPathId + ",left)")
+        #folderPathId = "videodb://movies/sets/"
+        return xbmc.getCondVisibility("!IsEmpty(ListItem.DBID) + ListItem.IsCollection")
 
 
 ##############################
