@@ -453,6 +453,10 @@ class Settings():
         return ADDON.getSetting("movielist") == 'true'
 
     @staticmethod
+    def isPlaySetsList():
+        return ADDON.getSetting("setslist") == 'true'
+
+    @staticmethod
     def isPlayTvShowList():
         return ADDON.getSetting("tvlist") == 'true'
 

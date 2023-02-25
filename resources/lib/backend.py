@@ -71,7 +71,7 @@ class DelayedStartTheme():
     # Method to support a small delay if running on the list screen
     def _checkListPlayingDelay(self, themes):
         # Check if we are playing themes on the list view, in which case we will want to delay them
-        if (Settings.isPlayMovieList() and WindowShowing.isMovies()) or (Settings.isPlayTvShowList() and WindowShowing.isTvShowTitles()) or (Settings.isPlayMusicVideoList() and WindowShowing.isMusicVideoTitles()):
+        if (Settings.isPlayMovieList() and WindowShowing.isMovies()) or (Settings.isPlaySetsList() and WindowShowing.isMovieSet()) or (Settings.isPlayTvShowList() and WindowShowing.isTvShowTitles()) or (Settings.isPlayMusicVideoList() and WindowShowing.isMusicVideoTitles()):
             log_msg("DelayedStartTheme: Movie List playing delay detected, anchorTime = %s" % str(self.anchorTime))
             if themes != self.themesToStart:
                 # Theme selection has changed
@@ -238,6 +238,9 @@ class TunesBackend():
             return True
         # Only valid if wanting theme on movie list
         if WindowShowing.isMovies() and Settings.isPlayMovieList():
+            return True
+        # Only valid if wanting theme on Sets list
+        if WindowShowing.isMovieSet() and Settings.isPlaySetsList():
             return True
         # Only valid if wanting theme on TV list
         if WindowShowing.isTvShowTitles() and Settings.isPlayTvShowList():
