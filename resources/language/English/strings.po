@@ -525,3 +525,7 @@ msgstr ""
 msgctxt "#32994"
 msgid "Error: Failed to connect to goear.com"
 msgstr ""
+
+msgctxt "#32995"
+msgid "Play themes when browsing Sets list"
+msgstr ""
