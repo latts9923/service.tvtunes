@@ -3,6 +3,7 @@
 	<category label="32105">
 		<setting id="enableThemePlaying" type="bool" label="32084" default="true"/>
 		<setting id="movielist" type="bool" label="32016" default="false"/>
+        <setting id="setslist" type="bool" label="32995" default="false"/>
 		<setting id="tvlist" type="bool" label="32017" default="false"/>
 		<setting id="musicvideolist" type="bool" label="32029" default="false"/>
 		<setting id="videoInformation" type="bool" label="32127" default="true"/>
