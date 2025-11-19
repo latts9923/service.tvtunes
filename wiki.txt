@@ -1,4 +1,4 @@
-[[https://github.com/robwebset/script.tvtunes/raw/master/icon.png]]
+[[https://github.com/latts9923/service.tvtunes/raw/Omega/icon.png]]
 
 == Introduction ==
 TvTunes will play themes while browsing your Kodi library.
@@ -6,8 +6,7 @@ TvTunes will play themes while browsing your Kodi library.
 == Theme Browser ==
 The "Theme Browser" enables you to look at which Movies/TV Shows/Music Videos you already have themes available for. You can load the theme browser in the following ways:
 
-# From the System Menu -> Add-ons -> My Add-ons -> Video Add-ons -> TvTunes
-# Videos -> Addons -> TvTunes
+# From the System Menu -> Add-ons -> My Add-ons -> Services -> TvTunes
 <br />
 == Video Themes ==
 If you are using video themes and are storing them with your main videos (i.e. theme.avi) then you will need to ensure that they are not picked up when you run the scraper to load your videos into the library. To ensure they are not picked up you can add the following to the [http://kodi.wiki/view/Advancedsettings.xml advanced settings]
