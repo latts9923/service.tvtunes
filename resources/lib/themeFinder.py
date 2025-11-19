@@ -150,8 +150,8 @@ class NfoReader():
 
             del nfoXml
         except:
-            log_msg("NfoReader: Failed to process NFO: %s" % nfoFileName, True, LOGERROR)
-            log_msg("NfoReader: %s" % traceback.format_exc(), True, LOGERROR)
+            log_msg("NfoReader: Failed to process NFO: %s" % nfoFileName, self.debug_logging_enabled)
+            log_msg("NfoReader: %s" % traceback.format_exc(), self.debug_logging_enabled)
             returnValue = False
 
         # Not that the entire NFO file has been read, see if we need to verify
@@ -222,7 +222,7 @@ class NfoReader():
                         log_msg("NfoReader: file from playlist = %s" % file, self.debug_logging_enabled)
                         self.themeFiles.append(file)
             except:
-                log_msg("NfoReader: playlist file processing error = %s" % playlistFile, True, xbmc.LOGERROR)
+                log_msg("NfoReader: playlist file processing error = %s" % playlistFile, True, self.debug_logging_enabled)
         else:
             log_msg("NfoReader: playlist file not found = %s" % playlistFile, self.debug_logging_enabled)
 
@@ -340,7 +340,7 @@ class ThemeFiles():
             # Check if we are only supposed to play one theme when there are multiple
             # available
             if Settings.onlyPlaySingleTheme():
-                firstTheme = playlist[0].getfilename()
+                firstTheme = playlist[0].getLabel()
                 playlist.clear()
                 playlist.add(url=firstTheme)
 
@@ -350,7 +350,7 @@ class ThemeFiles():
         # the seek dialog being displayed on the screen and also prevent
         # the need to start the theme playing before changing the start point
         if Settings.isRandomStart() and playlist.size() > 0:
-            filename = playlist[0].getfilename()
+            filename = playlist[0].getPath()
             duration = int(playlist[0].getduration())
 
             log_msg("ThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
@@ -642,7 +642,7 @@ class MusicThemeFiles():
         # Take the list of files and create a playlist from them
         # Needs to be a Music playlist otherwise repeat will not work
         # via the JSON interface
-        playlist = PlayList(PLAYLIST_MUSIC)
+        playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
         playlist.clear()
         for aFile in self.themeFiles:
             # Add the theme file to a playlist
@@ -654,7 +654,7 @@ class MusicThemeFiles():
             # Check if we are only supposed to play one theme when there are multiple
             # available
             if Settings.onlyPlaySingleTheme():
-                firstTheme = playlist[0].getfilename()
+                firstTheme = playlist[0].getPath()
                 playlist.clear()
                 playlist.add(url=firstTheme)
 
@@ -664,7 +664,7 @@ class MusicThemeFiles():
         # the seek dialog being displayed on the screen and also prevent
         # the need to start the theme playing before changing the start point
         if Settings.isRandomStart() and playlist.size() > 0:
-            filename = playlist[0].getfilename()
+            filename = playlist[0].getPath()
             duration = int(playlist[0].getduration())
 
             log_msg("MusicThemeFiles: Duration is %d for file %s" % (duration, filename), self.debug_logging_enabled)
@@ -700,13 +700,13 @@ class MusicThemeFiles():
     def _getThemesForActiveItem(self):
         themes = []
         # There could be several sections for the music library so check the different options
-        albumArtist = getInfoLabel('ListItem.AlbumArtist')
+        albumArtist = xbmc.getInfoLabel('ListItem.AlbumArtist')
         log_msg("MusicThemeFiles: AlbumArtist is %s" % albumArtist, self.debug_logging_enabled)
 
-        artist = getInfoLabel('ListItem.Artist')
+        artist = xbmc.getInfoLabel('ListItem.Artist')
         log_msg("MusicThemeFiles: Artist is %s" % artist, self.debug_logging_enabled)
 
-        album = getInfoLabel('ListItem.Album')
+        album = xbmc.getInfoLabel('ListItem.Album')
         log_msg("MusicThemeFiles: Album is %s" % album, self.debug_logging_enabled)
 
         # Now build up the JSON command using the values we have
